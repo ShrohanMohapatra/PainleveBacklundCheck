@@ -149,17 +149,23 @@ kivyBuilder = Builder.load_string(
 		text: 'Painleve property and Backlund transforms'
 		size_hint: (0.4, 0.1)
 		pos_hint: {'x': 0.05, 'y': 0.85}
+		font_size: '20sp'
+		hint_font_size: '30sp'
 	MDLabel:
 		id: inputPDElabel
 		text: 'Enter the PDE here =>'
 		size_hint: (0.2, 0.1)
 		pos_hint: {'x': 0.05, 'y': 0.7}
+		font_size: '20sp'
+		hint_font_size: '30sp'
 	MDTextField:
 		id: inputPDEText
 		hint_text: 'Enter the PDE in the sympy-compatible format'
 		size_hint: (0.6, 0.1)
 		pos_hint: {'x': 0.35, 'y': 0.7}
 		multiline: True
+		font_size: '20sp'
+		hint_font_size: 50
 	MDRoundFlatButton:
 		id: evaluateButton
 		text: 'Evaluate'
@@ -167,6 +173,7 @@ kivyBuilder = Builder.load_string(
 		size_hint: (0.25, 0.05)
 		pos_hint: {'x': 0.2, 'y': 0.575}
 		on_release: app.evaluate_button()
+		font_size: '20sp'
 	MDRoundFlatButton:
 		id: resetButton
 		text: 'Reset'
@@ -174,6 +181,7 @@ kivyBuilder = Builder.load_string(
 		size_hint: (0.25, 0.05)
 		pos_hint: {'x': 0.55, 'y': 0.575}
 		on_release: app.reset_button()
+		font_size: '20sp'
 	MDTextField:
 		id: outputText
 		hint_text: 'You will see the output here'
@@ -181,6 +189,8 @@ kivyBuilder = Builder.load_string(
 		size_hint: (0.9, 0.5)
 		pos_hint: {'x': 0.05, 'y': 0.05}
 		multiline: True
+		font_size: '20sp'
+		hint_font_size: 50
 """)
 class PainleveBacklundCheck(MDFloatLayout):
 	painlevebacklund = ObjectProperty(None)
