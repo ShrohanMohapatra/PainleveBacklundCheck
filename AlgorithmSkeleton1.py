@@ -1,5 +1,6 @@
 from sympy import *
 from pprint import pprint as pretty_printer
+from sympy.calculus.euler import euler_equations
 init_printing()
 x, t, sigma, b = symbols('x t sigma b')
 f = Function('f')(x, t)
@@ -28,7 +29,6 @@ def totalTableOfCoeffsForPoly(expr, zeta):
 					)
 	polynomial = Poly(expr, gens=generator_list)
 	degree_list = polynomial.degree_list()
-	print(degree_list)
 	min_deg, max_deg = degree_list[0], degree_list[1]
 	min_deg = -min_deg
 	degree_coeff_tuple = [
@@ -54,8 +54,6 @@ def PainlevePDE_withBacklundTransform(
 	orig_eqn = expand(function_PDE.subs(f, u).doit())
 	# print(orig_eqn)
 	totalTable = totalTableOfCoeffsForPoly(orig_eqn, phi(x, t))
-	print('>>',end = ' ')
-	pretty_printer(totalTable)
 	U1 = [U[k](x, t) for k in range(M+1)]
 	U_final = [0 for k in range(M+1)]
 	for k in range(len(totalTable)):
@@ -131,6 +129,10 @@ def ultimatePainleve(
 			flag = compatibility_Conditions[-1].subs(U[-alpha](x, t),f).doit() == expand(function_PDE)
 			if not flag: continue
 			else: break
+	if alpha == -4 and len(compatibility_Conditions) == 1:
+		if backlund_transform == U[4](x, t):
+			# print('Something wrong here definitely')
+			alpha = None
 	return (alpha, backlund_transform, compatibility_Conditions)
 
 
