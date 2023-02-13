@@ -140,6 +140,10 @@ def ultimatePainleve(
 				# 	U[-alpha](x, t)-phi(x, t)
 				# 	)
 				break
+	if alpha == -4 and len(compatibility_Conditions) == 1:
+		if backlund_transform == U[4](x, t):
+			# print('Something wrong here definitely')
+			alpha = None
 	return (alpha, backlund_transform, compatibility_Conditions)
 kivyBuilder = Builder.load_string(
 """
