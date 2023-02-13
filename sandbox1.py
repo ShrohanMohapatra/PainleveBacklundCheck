@@ -82,7 +82,7 @@ print('where the compatibility conditions are given by')
 for equation in compatibility:
 	if equation != 0: print('>',Eq(equation, 0))
 
-PowerLawNonlinearKG = parse_expr('diff(f(x,t),x,t)-f(x,t)**4')
+PowerLawNonlinearKG = parse_expr('diff(f(x,t),x,t)-sigma*f(x,t)**4')
 print()
 print(
 	'Let\'s check the Backlund transform from the '+\
@@ -100,6 +100,25 @@ print('The transform is given by U =',  transform)
 print('where the compatibility conditions are given by')
 for equation in compatibility:
 	if equation != 0: print('>',Eq(equation, 0))
+
+# higherPowerGenKdV = parse_expr('diff(f(x,t),t)+diff(f(x,t),x,x,x)+f(x,t)**14*diff(f(x,t),x)')
+# print()
+# print(
+# 	'Let\'s check the Backlund transform from the '+\
+# 	'Painleve property of the power-14 generalized KdV'
+# 	)
+# alpha, transform, compatibility = ultimatePainleve(
+# 		higherPowerGenKdV, # Input PDE
+# 		x, # The input variable used for the spatial variable
+# 		t # The input variable used for the temporal variable
+# 		# alpha # The power balancing exponent
+# 	)
+# print()
+# print('The power balancing exponent is ',alpha)
+# print('The transform is given by U =',  transform)
+# print('where the compatibility conditions are given by')
+# for equation in compatibility:
+# 	if equation != 0: print('>',Eq(equation, 0))
 
 CaudreyDoddGibbonPDE = parse_expr('diff(f(x, t), t)+diff('+
 	'diff(f(x, t), x, x, x, x) + 30*f(x, t)*diff(f(x, t), x)'+
@@ -144,6 +163,24 @@ for equation in compatibility:
 	if equation != 0: print('>',Eq(equation, 0))
 print()
 
+BoussinesqEquation = parse_expr('diff(f(x,t),t,t)+2*f(x,t)*diff(f(x,t),x,x)+2*diff(f(x,t),x)**2+1/3*diff(f(x,t),x,x,x,x)')
+print()
+print(
+	'Let\'s check the Backlund transform from the '+\
+	'Painleve property of the Boussinesq equation'
+	)
+alpha, transform, compatibility = ultimatePainleve(
+		BoussinesqEquation, # Input PDE
+		x, # The input variable used for the spatial variable
+		t # The input variable used for the temporal variable
+		# alpha # The power balancing exponent
+	)
+print()
+print('The power balancing exponent is ',alpha)
+print('The transform is given by U =',  transform)
+print('where the compatibility conditions are given by')
+for equation in compatibility:
+	if equation != 0: print('>',Eq(equation, 0))
 
 # b = 2
 # CamassaHolmEquation = parse_expr('2*f(x,t)**3*diff(f(x,t),x)'
