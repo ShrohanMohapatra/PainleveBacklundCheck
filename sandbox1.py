@@ -12,11 +12,16 @@ alpha, transform, compatibility = ultimatePainleve(
 		t # The input variable used for the temporal variable
 		# alpha # The power balancing exponent
 	)
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U =',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+print()
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
 
 KdVPDE = parse_expr('diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)+sigma*diff(f(x,t),x,x,x)')
 print()
@@ -31,14 +36,17 @@ alpha, transform, compatibility = ultimatePainleve(
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U =',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
 
-def TransformSineGordon(V):
-	return 2*V*diff(V, x, t) - 2*diff(V, x)*diff(V, t)-V**3+V
+
 TransformSineGordon = parse_expr('2*f(x,t)*diff(f(x,t),x,t)'+
 	'-2*diff(f(x,t),x)*diff(f(x,t),t)-f(x,t)**3+f(x,t)')
 print()
@@ -54,14 +62,41 @@ alpha, transform, compatibility = ultimatePainleve(
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by V =',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
 
-def ModifiedKdVPDE(w):
-	return diff(w, t)-diff(w**3-2*sigma**2*diff(w, x, x), x)
+
+BoussinesqEquation = parse_expr('diff(f(x,t),t,t)+2*f(x,t)*diff(f(x,t),x,x)+2*diff(f(x,t),x)**2+1/3*diff(f(x,t),x,x,x,x)')
+print()
+print(
+	'Let\'s check the Backlund transform from the '+\
+	'Painleve property of the Boussinesq equation'
+	)
+alpha, transform, compatibility = ultimatePainleve(
+		BoussinesqEquation, # Input PDE
+		x, # The input variable used for the spatial variable
+		t # The input variable used for the temporal variable
+		# alpha # The power balancing exponent
+	)
+print()
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
+
+
 ModifiedKdVPDE = parse_expr('diff(f(x, t), t)-diff(f(x, t)**3'+
 	'-2*sigma**2*diff(f(x, t),x,x),x)')
 print()
@@ -76,11 +111,16 @@ alpha, transform, compatibility = ultimatePainleve(
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U = ',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
+
 
 PowerLawNonlinearKG = parse_expr('diff(f(x,t),x,t)-sigma*f(x,t)**4')
 print()
@@ -95,52 +135,16 @@ alpha, transform, compatibility = ultimatePainleve(
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U =',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
 
-# higherPowerGenKdV = parse_expr('diff(f(x,t),t)+diff(f(x,t),x,x,x)+f(x,t)**14*diff(f(x,t),x)')
-# print()
-# print(
-# 	'Let\'s check the Backlund transform from the '+\
-# 	'Painleve property of the power-14 generalized KdV'
-# 	)
-# alpha, transform, compatibility = ultimatePainleve(
-# 		higherPowerGenKdV, # Input PDE
-# 		x, # The input variable used for the spatial variable
-# 		t # The input variable used for the temporal variable
-# 		# alpha # The power balancing exponent
-# 	)
-# print()
-# print('The power balancing exponent is ',alpha)
-# print('The transform is given by U =',  transform)
-# print('where the compatibility conditions are given by')
-# for equation in compatibility:
-# 	if equation != 0: print('>',Eq(equation, 0))
-
-CaudreyDoddGibbonPDE = parse_expr('diff(f(x, t), t)+diff('+
-	'diff(f(x, t), x, x, x, x) + 30*f(x, t)*diff(f(x, t), x)'+
-	' + 60*f(x, t)**3, x)')
-print()
-print(
-	'Let\'s check the Backlund transform from the '+
-	'Painleve property of the Caudrey-Dodd-Gibbon KdV equation'
-	)
-alpha, transform, compatibility = ultimatePainleve(
-		CaudreyDoddGibbonPDE, # Input PDE
-		x, # The input variable used for the spatial variable
-		t # The input variable used for the temporal variable
-		# alpha # The power balancing exponent
-	)
-print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U = ',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
-print()
 
 BBM_PDE = parse_expr('diff(f(x, t), t)+diff(f(x, t), x)'
 	+'+f(x, t)*diff(f(x, t), x)-diff(f(x, t), x, x, t)')
@@ -156,31 +160,111 @@ alpha, transform, compatibility = ultimatePainleve(
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U = ',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
-print()
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
 
-BoussinesqEquation = parse_expr('diff(f(x,t),t,t)+2*f(x,t)*diff(f(x,t),x,x)+2*diff(f(x,t),x)**2+1/3*diff(f(x,t),x,x,x,x)')
+
+BBM_potential = parse_expr('diff(f(x,t),t)+diff(f(x,t),x)+1/2*diff(f(x,t),x)**2-diff(f(x,t),x,x,t)')
 print()
 print(
 	'Let\'s check the Backlund transform from the '+\
-	'Painleve property of the Boussinesq equation'
+	'Painleve property of the Benjamin-Bona-Mahoney equation'+\
+	' in the potential form'
 	)
 alpha, transform, compatibility = ultimatePainleve(
-		BoussinesqEquation, # Input PDE
+		BBM_potential, # Input PDE
 		x, # The input variable used for the spatial variable
 		t # The input variable used for the temporal variable
 		# alpha # The power balancing exponent
 	)
 print()
-print('The power balancing exponent is ',alpha)
-print('The transform is given by U =',  transform)
-print('where the compatibility conditions are given by')
-for equation in compatibility:
-	if equation != 0: print('>',Eq(equation, 0))
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
+
+KuramotoSivashinsky = parse_expr('diff(f(x,t),t)+1/2*diff(f(x,t),x)**2+diff(f(x,t),x,x)+diff(f(x,t),x,x,x,x)')
+print()
+print(
+	'Let\'s check the Backlund transform from the '+\
+	'Painleve property of the Kuramoto-Sivashinsky equation'+\
+	' in the potential form'
+	)
+alpha, transform, compatibility = ultimatePainleve(
+		KuramotoSivashinsky, # Input PDE
+		x, # The input variable used for the spatial variable
+		t # The input variable used for the temporal variable
+		# alpha # The power balancing exponent
+	)
+print()
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+
+
+# higherPowerGenKdV = parse_expr('diff(f(x,t),t)+diff(f(x,t),x,x,x)+f(x,t)**14*diff(f(x,t),x)')
+# print()
+# print(
+# 	'Let\'s check the Backlund transform from the '+\
+# 	'Painleve property of the power-14 generalized KdV'
+# 	)
+# alpha, transform, compatibility = ultimatePainleve(
+# 		higherPowerGenKdV, # Input PDE
+# 		x, # The input variable used for the spatial variable
+# 		t # The input variable used for the temporal variable
+# 		# alpha # The power balancing exponent
+# 	)
+# print()
+# if alpha == None:
+# 	print('The system is certainly non-integrable!')
+# else:
+# 	print('The power balancing exponent is ',alpha)
+# 	print('The transform is given by U =',  transform)
+# 	print('where the additional conditions are given by')
+# 	for equation in compatibility:
+# 		if equation != 0: print('>',Eq(equation, 0))
+# print()
+
+
+nonlinearPseudoParabolicDiffusion = parse_expr('(diff(f(x,t),t)-diff(f(x,t),x,x,t))**2-9/4*sigma**2*diff(f(x,t),x)*diff(f(x,t),x,x)**2')
+print()
+print(
+	'Let\'s check the Backlund transform from the '+\
+	'Painleve property of the nonlinear pseudo-parabolic type diffusion equation'
+	)
+alpha, transform, compatibility = ultimatePainleve(
+		nonlinearPseudoParabolicDiffusion, # Input PDE
+		x, # The input variable used for the spatial variable
+		t # The input variable used for the temporal variable
+		# alpha # The power balancing exponent
+	)
+print()
+if alpha == None:
+	print('The system is certainly non-integrable!')
+else:
+	print('The power balancing exponent is ',alpha)
+	print('The transform is given by U =',  transform)
+	print('where the additional conditions are given by')
+	for equation in compatibility:
+		if equation != 0: print('>',Eq(equation, 0))
+print()
+
 
 # b = 2
 # CamassaHolmEquation = parse_expr('2*f(x,t)**3*diff(f(x,t),x)'
@@ -201,7 +285,7 @@ for equation in compatibility:
 # print()
 # print('The power balancing exponent is ',alpha)
 # print('The transform is given by U = ',  transform)
-# print('where the compatibility conditions are given by')
+# print('where the additional conditions are given by')
 # for equation in compatibility:
 # 	if equation != 0: print('>',Eq(equation, 0))
 
@@ -225,7 +309,7 @@ for equation in compatibility:
 # print()
 # print('The power balancing exponent is ',alpha)
 # print('The transform is given by U = ',  transform)
-# print('where the compatibility conditions are given by')
+# print('where the additional conditions are given by')
 # for equation in compatibility:
 # 	if equation != 0: print('>',Eq(equation, 0))
 
@@ -247,7 +331,6 @@ for equation in compatibility:
 # 		alpha # The power balancing exponent
 # 	)
 # print('The transform is given by U = ',  transform)
-# print('where the compatibility conditions are given by')
+# print('where the additional conditions are given by')
 # for equation in compatibility:
 # 	if equation != 0: print('>',Eq(equation, 0))
-
