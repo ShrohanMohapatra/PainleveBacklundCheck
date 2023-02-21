@@ -119,31 +119,24 @@ def ultimatePainleve(
 	x, # The input variable used for the spatial variable
 	t, # The input variable used for the temporal variable
 	):
-	# print('Input PDE => ', function_PDE)
 	range_of_exponents = [-1, -2, -3, -4]
 	flag = False
 	for alpha in range_of_exponents:
 		M = int(-alpha + 3) # Maximum number of terms
 		U = [Function('U'+str(k)) for k in range(M+1)]
-		array_Returner = PainlevePDE_withBacklundTransform(
-			function_PDE, x, t, alpha)
-		backlund_transform, compatibility_Conditions = array_Returner[0],\
-														array_Returner[1]
+		backlund_transform, compatibility_Conditions = PainlevePDE_withBacklundTransform(function_PDE, x, t, alpha)
 		if len(compatibility_Conditions) < 2: continue
 		else:
-			flag = compatibility_Conditions[-1].subs(
-				U[-alpha](x, t),f).doit() == expand(function_PDE)
+			flag = compatibility_Conditions[-1].subs(U[-alpha](x, t),f).doit() == expand(function_PDE)
 			if not flag: continue
-			else:
-				# phi = Function('phi')
-				# compatibility_Conditions.append(
-				# 	U[-alpha](x, t)-phi(x, t)
-				# 	)
-				break
-	if alpha == -4 and len(compatibility_Conditions) == 1:
-		if backlund_transform == U[4](x, t):
-			# print('Something wrong here definitely')
-			alpha = None
+			else: break
+	if alpha == -4 and len(compatibility_Conditions) == 1 and backlund_transform == U[4](x,t):
+		return (None, backlund_transform, compatibility_Conditions)
+	for k in range(len(compatibility_Conditions)):
+		if str(compatibility_Conditions[k]).find(str(U[-alpha](x, t)))==-1:
+			return (None, backlund_transform, [])				
+	if not flag:
+		alpha, compatibility_Conditions = None, []
 	return (alpha, backlund_transform, compatibility_Conditions)
 kivyBuilder = Builder.load_string(
 """
@@ -223,16 +216,20 @@ class PainleveBacklundCheckApp(MDApp):
 			x, # The input variable used for the spatial variable
 			t # The input variable used for the temporal variable
 		)
-		final_output = 'The power balancing exponent is alpha = '+\
-						str(alpha)+'\n'
-		final_output += 'The transform is given by U = '+\
-						str(transform)+'\n'
-		final_output += 'where the compatibility conditions are'+\
-						' given by\n'
-		for equation in compatibility:
-			if equation != 0:
-				final_output += '>'+str(Eq(equation, 0))+'\n'
-		self.root.ids.outputText.text = final_output
+		if alpha == None:
+			self.root.ids.outputText.text = 'The equation is non-integrable due to the failure of WTC test.'
+		else:
+			final_output = 'The power balancing exponent is alpha = '+\
+							str(alpha)+'\n'
+			final_output += 'The transform is given by U = '+\
+							str(transform)+'\n'
+			final_output += 'where the additional conditions are'+\
+							' given by\n'
+			for equation in compatibility:
+				if equation != 0:
+					final_output += '>'+str(Eq(equation, 0))+'\n'
+			final_output += '\n Note that you might have to check the compatibility of the equations (except the last one)'
+			self.root.ids.outputText.text = final_output
 	def reset_button(self):
 		self.root.ids.outputText.text = ''
 		self.root.ids.inputPDEText.text = ''
