@@ -1,11 +1,12 @@
 from sympy import *
 from pprint import pprint as pretty_printer
 from sympy.calculus.euler import euler_equations
+import re
 init_printing()
 x, t, sigma, b = symbols('x t sigma b')
 f = Function('f')(x, t)
-# I am just trying it for integral alpha
-# f = Symbol('f')
+# This package works well for integral values of alpha
+# ----------------------------------------
 # Painleve property and Backlund transform
 def totalTableOfCoeffsForPoly(expr, zeta):
 	generator_list = [1/zeta, zeta]
@@ -69,13 +70,13 @@ def PainlevePDE_withBacklundTransform(
 			try:
 				soln = pdsolve(
 					equation.subs(
-						[(U[m](x,t), U_final[m]) for m in range(k)]),
+						[(U[m](x, t), U_final[m]) for m in range(k)]),
 					U[k](x, t)
 				)
 			except:
 				soln = solve(
 					equation.subs(
-						[(U[m](x,t), U_final[m]) for m in range(k)]),
+						[(U[m](x, t), U_final[m]) for m in range(k)]),
 					U[k](x, t)
 				)
 		if len(soln) == 0: break
@@ -112,29 +113,22 @@ def ultimatePainleve(
 	x, # The input variable used for the spatial variable
 	t, # The input variable used for the temporal variable
 	):
-	# print('Input PDE => ', function_PDE)
 	range_of_exponents = [-1, -2, -3, -4]
 	flag = False
 	for alpha in range_of_exponents:
 		M = int(-alpha + 3) # Maximum number of terms
-		# print(alpha)
 		U = [Function('U'+str(k)) for k in range(M+1)]
 		backlund_transform, compatibility_Conditions = PainlevePDE_withBacklundTransform(function_PDE, x, t, alpha)
-		# print('-->', alpha, compatibility_Conditions)
 		if len(compatibility_Conditions) < 2: continue
 		else:
-			# num_Of_Equations = len(compatibility_Conditions)
-			# print(compatibility_Conditions[-1])
-			# print(compatibility_Conditions[-1].subs(U[-alpha](x, t),f).doit())
 			flag = compatibility_Conditions[-1].subs(U[-alpha](x, t),f).doit() == expand(function_PDE)
 			if not flag: continue
 			else: break
-	if alpha == -4 and len(compatibility_Conditions) == 1:
-		if backlund_transform == U[4](x, t):
-			# print('Something wrong here definitely')
-			alpha = None
+	if alpha == -4 and len(compatibility_Conditions) == 1 and backlund_transform == U[4](x,t):
+		return (None, backlund_transform, compatibility_Conditions)
+	for k in range(len(compatibility_Conditions)):
+		if str(compatibility_Conditions[k]).find(str(U[-alpha](x, t)))==-1:
+			return (None, backlund_transform, [])				
+	if not flag:
+		alpha, compatibility_Conditions = None, []
 	return (alpha, backlund_transform, compatibility_Conditions)
-
-
-
-
