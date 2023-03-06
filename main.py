@@ -217,7 +217,7 @@ class PainleveBacklundCheckApp(MDApp):
 			t # The input variable used for the temporal variable
 		)
 		if alpha == None:
-			self.root.ids.outputText.text = 'The equation is non-integrable due to the failure of WTC test.'
+			self.root.ids.outputText.text = 'The equation is expected to be non-integrable due to the failure of WTC test.'
 		else:
 			final_output = 'The power balancing exponent is alpha = '+\
 							str(alpha)+'\n'
