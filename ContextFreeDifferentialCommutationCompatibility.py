@@ -1,0 +1,249 @@
+from sympy import *
+from collections import Counter
+
+def showDiffNotation(expr):
+	functions = expr.atoms(Function)
+	reps = {}
+	
+	for fun in functions:
+		# Consider the case that some functions won't have the name
+		# attribute e.g. Abs of an elementary function
+		try:            
+			reps[fun] = Symbol(fun.name) # Otherwise functions with greek symbols aren't replaced
+		except AttributeError:
+			continue
+
+	dreps = [(deriv, Symbol(deriv.expr.subs(reps).name + "_{," +
+							''.join(par.name for par in deriv.variables) + "}"))  \
+			for deriv in expr.atoms(Derivative)]
+
+	# Ensure that higher order derivatives are replaced first, then lower ones.
+	# Otherwise you get d/dr w_r instead of w_rr
+
+	dreps.sort(key=lambda x: len(x[0].variables), reverse=True)
+	output = expr.subs(dreps).subs(reps)
+
+	return output
+
+def max_order_term(original_equation, func):
+	terms_from_the_original_equation = original_equation.as_ordered_terms()
+	order_of_original_equation = ode_order(original_equation, func)
+	for individual_term in terms_from_the_original_equation:
+		if ode_order(individual_term, func) == order_of_original_equation:
+			factorList = factor_list(individual_term)
+			for factor in factorList[1]:
+				if ode_order(factor[0], func) == order_of_original_equation:
+					actual_term = factor[0]**factor[1]
+					full_term = individual_term
+					break
+			break
+	actual_max_order_term = actual_term
+	coefficient = simplify(full_term/actual_max_order_term)
+	return [coefficient, actual_term, factor[0], ode_order(factor[0], func)]
+
+def simplificationPDE(inputPDE1, inputPDE2, func):
+	max_order_term1 = max_order_term(inputPDE1, func)
+	max_order_term2 = max_order_term(inputPDE2, func)
+	A1 = max_order_term1[0] # max_order_term1[0]/(max_order_term1[1]**max_order_term1[2])
+	A2 = max_order_term2[0] # max_order_term2[0]/(max_order_term2[1]**max_order_term2[2])
+	B1 = inputPDE1 - A1*max_order_term1[2]
+	B2 = inputPDE2 - A2*max_order_term2[2]
+
+	inputPDE1 = expand(-B1/A1) # (max_order_term1[1]**max_order_term1[2])
+	inputPDE1, _ = fraction(together(inputPDE1.doit()))
+	inputPDE1 = expand(inputPDE1)
+	inputPDE2 = expand(-B2/A2) # (max_order_term2[1]**max_order_term2[2])
+	inputPDE2, _ = fraction(together(inputPDE2.doit()))
+	inputPDE2 = expand(inputPDE2)
+
+
+	print('----------------------------------------')
+	print('Here we compute the commutation of the following two PDEs:')
+	print('----------------------------------------')
+	print('Eqn (1) >>')
+	print('----------------------------------------')
+	print(inputPDE1, '=', 0)
+	print('----------------------------------------')
+	print('----------------------------------------')
+	print('Eqn (2) >>')
+	print('----------------------------------------')
+	print(inputPDE2, '=', 0)
+	print('----------------------------------------')
+	print('The maximum order term in equation 1 is gamma_1 = ', max_order_term1[2])
+	print('----------------------------------------')
+	print('----------------------------------------')
+	print('The maximum order term in equation 2 is gamma_2 = ', max_order_term2[2])
+	print('----------------------------------------')
+	print('In this scheme we represent eqn1 = A1*gamma_1 + B1 and eqn2 = A2*gamma_2 + B2 where')
+	print('----------------------------------------')
+	print('A1 =', A1)
+	print('----------------------------------------')
+	print('A2 =', A2)
+	print('----------------------------------------')
+	print('B1 =', B1)
+	print('----------------------------------------')
+	print('B2 =', B2)
+	print('----------------------------------------')
+
+	allAvailableVariables = func.free_symbols
+
+	varsFromPDE1 = list(max_order_term1[2].variables) if max_order_term1[3] != 0 else []
+	varsFromPDE2 = list(max_order_term2[2].variables) if max_order_term2[3] != 0 else []
+
+	print('-------------------------------')
+	print('The variables of differentiation in gamma_1')
+	print('-------------------------------')
+	print(varsFromPDE1)
+	print('-------------------------------')
+	print('-------------------------------')
+	print('The variables of differentiation in gamma_2')
+	print('-------------------------------')
+	print(varsFromPDE2)
+	print('-------------------------------')
+
+	dictFromPDE1 = Counter(varsFromPDE1)
+	dictFromPDE2 = Counter(varsFromPDE2)
+
+	for variable in dictFromPDE1:
+		if variable not in dictFromPDE2:
+			dictFromPDE2[variable] = 0
+
+	for variable in dictFromPDE2:
+		if variable not in dictFromPDE1:
+			dictFromPDE1[variable] = 0
+
+	dictLCM_MixedPartialDeriv = {}
+	dictFromPDE3 = {}
+	dictFromPDE4 = {}
+	for variable in dictFromPDE1:
+		dictLCM_MixedPartialDeriv[variable] = max(dictFromPDE1[variable], dictFromPDE2[variable])
+		dictFromPDE3[variable] = dictLCM_MixedPartialDeriv[variable] - dictFromPDE1[variable]
+		dictFromPDE4[variable] = dictLCM_MixedPartialDeriv[variable] - dictFromPDE2[variable]
+
+	varsFromPDE3 = []
+	varsFromPDE4 = []
+
+	for variable in dictFromPDE3:
+		for k in range(dictFromPDE3[variable]):
+			varsFromPDE3.append(variable)
+
+	for variable in dictFromPDE4:
+		for k in range(dictFromPDE4[variable]):
+			varsFromPDE4.append(variable)
+
+	print('-------------------------------')
+	print('The variables of differentiation for the expression -B1/A1 from equation 1 are:')
+	print('-------------------------------')
+	print(varsFromPDE3)
+	print('-------------------------------')
+	print('The variables of differentiation for the expression -B2/A2 from equation 1 are:')
+	print('-------------------------------')
+	print('varsFromPDE4')
+	print('-------------------------------')
+	print(varsFromPDE4)
+	print('-------------------------------')
+
+	inputPDE3 = inputPDE1
+	for variable in varsFromPDE3:
+		inputPDE3 = diff(inputPDE3, variable)
+		inputPDE3 = expand(inputPDE3.doit())
+
+	inputPDE3 = expand(inputPDE3)
+	inputPDE3, _ = fraction(together(inputPDE3.doit()))
+	inputPDE3 = expand(inputPDE3)
+
+	inputPDE4 = inputPDE2
+	for variable in varsFromPDE4:
+		inputPDE4 = diff(inputPDE4, variable)
+		inputPDE4 = expand(inputPDE4.doit())
+
+	inputPDE4 = expand(inputPDE4)
+	inputPDE4, _ = fraction(together(inputPDE4.doit()))
+	inputPDE4 = expand(inputPDE4)
+
+	print('----------------------------')
+	print('Expression after differentiation of equation 1')
+	print('----------------------------')
+	print(inputPDE3)
+	print('----------------------------')
+	print('----------------------------')
+	print('----------------------------')
+	print('Expression after differentiation of equation 2')
+	print('----------------------------')
+	print(inputPDE4)
+	print('----------------------------')
+	print('----------------------------')
+
+	expression = inputPDE3 - inputPDE4
+	expression, _ = fraction(together(expression.doit()))
+	expression = expand(expression)
+
+	print('----------------------------')
+	print('Expression after commutation')
+	print('----------------------------')
+	print(expression)
+	print('----------------------------')
+
+	return expression
+
+def ContextFreeDifferentialCommutationCompatibilitySystemPDEs(systemsOfPDEs, func, depth_max = 25, depth = 0):
+	# original depth_max = 150
+	print('------------------------------------------------------------------------------------------------')
+	print('Welcome to recursion number = ',depth+1)
+	print('------------------------------------------------------------------------------------------------')
+
+	for k in range(len(systemsOfPDEs)):
+		print('--------------------------------------------------------------------------------------------')
+		print('>> PDE Number '+str(k+1)+' -->')
+		print('--------------------------------------------------------------------------------------------')
+		print(systemsOfPDEs[k])
+		print('--------------------------------------------------------------------------------------------')
+		print('>> Latex version')
+		print('--------------------------------------------------------------------------------------------')
+		try:
+			print_latex(showDiffNotation(systemsOfPDEs[k]))
+		except:
+			raise
+		print('--------------------------------------------------------------------------------------------')
+
+	orders_list = [max_order_term(equation, func)[3] for equation in systemsOfPDEs]
+	if len(systemsOfPDEs) == 2:
+		maximum_order = max(orders_list)
+		maximum_order_index = orders_list.index(maximum_order)
+		equation_2_new = expand(simplificationPDE(systemsOfPDEs[0], systemsOfPDEs[1], func))
+		if equation_2_new == 0:
+			return [depth, True]
+		else:
+			if depth >= depth_max: return [depth, False]
+			try:
+				return ContextFreeDifferentialCommutationCompatibilitySystemPDEs([systemsOfPDEs[maximum_order_index], equation_2_new], func, depth_max, depth + 1)
+			except Exception:
+				return [depth, False]
+	else:
+		systemsOfPDEs_F = [None for k in range(len(systemsOfPDEs))]
+		for k in range(len(systemsOfPDEs)-1):
+			systemsOfPDEs_F[k] = expand(simplificationPDE(systemsOfPDEs[k], systemsOfPDEs[k+1], func))
+		systemsOfPDEs_F[-1] = expand(simplificationPDE(systemsOfPDEs[-1], systemsOfPDEs[0], func))
+		flag = False
+		for k in range(len(systemsOfPDEs_F)):
+			print('---------------------------------------------------')
+			print('Number of terms in ',k, 'th PDE >>', len(Add.make_args(systemsOfPDEs_F[k])))
+			print('---------------------------------------------------')
+			print(systemsOfPDEs_F[k])
+			print('---------------------------------------------------')
+			print('Latex version')
+			print('---------------------------------------------------')
+			print_latex(showDiffNotation(systemsOfPDEs_F[k]))
+			print('---------------------------------------------------')
+			if len(Add.make_args(systemsOfPDEs_F[k])) > 500: return [depth, False]
+			flag = flag or systemsOfPDEs_F[k].equals(0)
+		if flag: return [depth, flag]
+		else:
+			if depth >= depth_max: return [depth, False]
+			try:
+				return ContextFreeDifferentialCommutationCompatibilitySystemPDEs(systemsOfPDEs_F, func, depth_max, depth + 1)
+			except Exception:
+				return [depth, False]
+
+
+
