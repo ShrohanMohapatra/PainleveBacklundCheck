@@ -7,6 +7,7 @@ from sympy import *
 from time import sleep
 import threading
 from collections import Counter
+from random import choice
 
 x, t, sigma, b, kappa = symbols('x t sigma b kappa')
 f = Function('f')
@@ -53,13 +54,13 @@ KV = '''
 		id: process_displayer
 		hint_text: "Process will be shown here"
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		text: "Process will be shown here"
 
 	MDRectangleFlatButton:
 		id: close_button
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		text: "Close"
 		on_release: app.close_handler()
 
@@ -67,17 +68,18 @@ MDScreen:
 
 	MDLabel:
 		id: main_handler
-		text: "Welcome to the Painleve-Backlund check app"
+		multiline: True
+		text: "Welcome to the \\nPainleve-Backlund \\n check app"
 		halign: "center"
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
 	MDTextField:
 		id: input_pde
 		text: "Enter the PDE"
 		font_name: "Georgia"
-		font_size: 18
+		font_size: 30
 		halign: "center"
 		pos_hint: {"center_x": 0.65, "center_y": 0.9}
 		size_hint: 0.5, 0.125
@@ -86,7 +88,7 @@ MDScreen:
 		multiline: True
 		id: integrability_handler
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		text: "The result of the integrability test will be shown here."
 		halign: "center"
 		pos_hint: {"center_x": 0.5, "center_y": 0.4}
@@ -96,7 +98,7 @@ MDScreen:
 		id: integrability_window
 		text: "Integrability test"
 		font_name: "Georgia"
-		font_size: 18
+		font_size: 30
 		theme_text_color: "Custom"
 		pos_hint: {"center_x": 0.4, "center_y": 0.1}
 		on_release: app.show_dialog()
@@ -118,7 +120,7 @@ class PainleveBacklundCheckApp(MDApp):
 	def build(self):
 		self.root = Builder.load_string(KV)
 		self.theme_cls.theme_style = 'Dark'
-		self.theme_cls.primary_palette = 'Green'
+		self.theme_cls.primary_palette = 'Pink'
 		return self.root
 
 	def on_start(self):
@@ -450,10 +452,12 @@ class PainleveBacklundCheckApp(MDApp):
 				except Exception:
 					return [depth, False]
 
-	def MultiThreadedContextFreeDifferentialCommutationCompatibilitySystemPDEs(self, systemsOfPDEs, func, resultHolderPlace):
-		resultHolderPlace.append(self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs(systemsOfPDEs, func))
-
 	def ContextSensitiveDifferentialCommutationCompatibilitySystemPDEs(self, systemsOfPDEs, contextualPDEs, phi, list_of_u_functions):
+		print('context sensitive check')
+		print('Entered system of PDEs =>', systemsOfPDEs)
+		print('Number of entered system of PDEs =>', len(systemsOfPDEs))
+		print('ContextualPDEs =>', contextualPDEs)
+		print('len(ContextualPDEs) =>', len(contextualPDEs))
 		assert len(contextualPDEs) == len(list_of_u_functions)
 		num_kappa = len(systemsOfPDEs)
 		n = len(contextualPDEs)
@@ -495,12 +499,14 @@ class PainleveBacklundCheckApp(MDApp):
 			solution_of_u_function_k = solve(equation_for_u_k, highest_order_term_of_u_function_k)[0]
 			solution_of_u_function_k = expand(solution_of_u_function_k)
 			solution_dictionary_for_all_higher_derivs[highest_order_term_of_u_function_k] = solution_of_u_function_k
-			print('---------------------------------------------------')
 			print(solution_dictionary_for_all_higher_derivs)
-			print('---------------------------------------------------')
+			self.string_storer = str(solution_dictionary_for_all_higher_derivs)
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
 			if highest_order_term_of_u_function_k not in list_of_all_highest_derivative_terms_in_uk:
 				list_of_all_highest_derivative_terms_in_uk.append(highest_order_term_of_u_function_k)
 		for k in range(num_kappa):
+			print('k = ',k,' num_kappa = ',num_kappa)
 			equation_k_from_the_phi_system = systemsOfPDEs[k]
 			list_of_terms = equation_k_from_the_phi_system.args
 			list_of_differential_terms_from_phi = []
@@ -510,6 +516,7 @@ class PainleveBacklundCheckApp(MDApp):
 					if differential_term not in list_of_differential_terms_from_phi:
 						list_of_differential_terms_from_phi.append(differential_term)
 			if k != num_kappa - 1:
+				print('equation_k_from_the_phi_system = ', equation_k_from_the_phi_system)
 				expression_terms = equation_k_from_the_phi_system.as_coefficients_dict()
 				list_of_differential_terms = []
 				for term, coefficient in expression_terms.items():
@@ -532,10 +539,13 @@ class PainleveBacklundCheckApp(MDApp):
 							max_order_derivative_in_t = count_of_t
 							max_total_order = len(list_of_partial_derivatives)
 							highest_order_term_of_phi_from_equation_k = derivative_term
+				print('highest_order_term_of_phi_from_equation_k = ',highest_order_term_of_phi_from_equation_k)
 				if highest_order_term_of_phi_from_equation_k in solution_dictionary_for_all_higher_derivs:
 					while True:
 						new_equation = expand(equation_k_from_the_phi_system.subs(highest_order_term_of_phi_from_equation_k,
 							solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k]).doit())
+						new_equation, _ = fraction(together(new_equation).doit())
+						new_equation = expand(new_equation)
 						order_of_phi_from_new_equation = ode_order(new_equation, phi)
 						list_of_terms_from_the_new_equation = new_equation.args
 						for term in list_of_terms_from_the_new_equation:
@@ -554,6 +564,7 @@ class PainleveBacklundCheckApp(MDApp):
 											if isinstance(sub_sub_term, Derivative) and ode_order(sub_sub_term, phi) == order_of_phi_from_new_equation:
 												highest_order_term_of_phi_from_equation_k = sub_sub_term
 												break
+						print('new highest_order_term_of_phi_from_equation_k -> ', highest_order_term_of_phi_from_equation_k)
 						if highest_order_term_of_phi_from_equation_k in solution_dictionary_for_all_higher_derivs: pass
 						else:
 							new_equation, _ = fraction(together(new_equation).doit())
@@ -561,22 +572,26 @@ class PainleveBacklundCheckApp(MDApp):
 							solution_of_highest_order_term_of_phi_from_equation_k = expand(solve(new_equation, highest_order_term_of_phi_from_equation_k)[0])
 							solution_of_highest_order_term_of_phi_from_equation_k = expand(solution_of_highest_order_term_of_phi_from_equation_k)
 							solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k] = solution_of_highest_order_term_of_phi_from_equation_k
-							print('---------------------------------------------------')
 							print(solution_dictionary_for_all_higher_derivs)
-							print('---------------------------------------------------')
+							self.string_storer = str(solution_dictionary_for_all_higher_derivs)
+							self.string_storer = self.string_storer[-100:]
+							Clock.schedule_once(self.scheduleOnceTester, 0)
 							if highest_order_term_of_phi_from_equation_k not in list_of_all_highest_derivative_terms_in_phi:
 								list_of_all_highest_derivative_terms_in_phi.append(highest_order_term_of_phi_from_equation_k)
 							break
 				else:
+					print('equation_k_from_the_phi_system = ', equation_k_from_the_phi_system)
 					solution_of_highest_order_term_of_phi_from_equation_k = solve(equation_k_from_the_phi_system, highest_order_term_of_phi_from_equation_k)[0]
 					solution_of_highest_order_term_of_phi_from_equation_k = expand(solution_of_highest_order_term_of_phi_from_equation_k)
 					solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k] = solution_of_highest_order_term_of_phi_from_equation_k
-					print('---------------------------------------------------')
 					print(solution_dictionary_for_all_higher_derivs)
-					print('---------------------------------------------------')
+					self.string_storer = str(solution_dictionary_for_all_higher_derivs)
+					self.string_storer = self.string_storer[-100:]
+					Clock.schedule_once(self.scheduleOnceTester, 0)
 					if highest_order_term_of_phi_from_equation_k not in list_of_all_highest_derivative_terms_in_phi:
 						list_of_all_highest_derivative_terms_in_phi.append(highest_order_term_of_phi_from_equation_k)
 			else:
+				print('equation_k_from_the_phi_system = ', equation_k_from_the_phi_system)
 				order_of_phi_from_equation_k = ode_order(equation_k_from_the_phi_system, phi)
 				for term in list_of_differential_terms_from_phi:
 					if ode_order(term, phi) == order_of_phi_from_equation_k:
@@ -586,6 +601,8 @@ class PainleveBacklundCheckApp(MDApp):
 					while True:
 						new_equation = expand(equation_k_from_the_phi_system.subs(highest_order_term_of_phi_from_equation_k,
 							solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k]).doit())
+						new_equation, _ = fraction(together(new_equation).doit())
+						new_equation = expand(new_equation)
 						order_of_phi_from_new_equation = ode_order(new_equation, phi)
 						list_of_terms_from_the_new_equation = new_equation.args
 						for term in list_of_terms_from_the_new_equation:
@@ -608,68 +625,166 @@ class PainleveBacklundCheckApp(MDApp):
 						else:
 							new_equation, _ = fraction(together(new_equation).doit())
 							new_equation = expand(new_equation)
-							print('highest_order_term_of_phi_from_equation_k -> ', highest_order_term_of_phi_from_equation_k)
-							print('new_equation -> ', new_equation)
+							print('equation_k_from_the_phi_system = ', equation_k_from_the_phi_system)
+							print('new_equation = ', new_equation)
+							print('highest_order_term_of_phi_from_equation_k = ', highest_order_term_of_phi_from_equation_k)
+							self.string_storer = str(highest_order_term_of_phi_from_equation_k)
+							self.string_storer = self.string_storer[-100:]
+							Clock.schedule_once(self.scheduleOnceTester, 0)
+							print('new_equation = ', new_equation)
+							self.string_storer = str(new_equation)
+							self.string_storer = self.string_storer[-100:]
+							Clock.schedule_once(self.scheduleOnceTester, 0)
 							solution_of_highest_order_term_of_phi_from_equation_k = solve(new_equation, highest_order_term_of_phi_from_equation_k)[0]
 							solution_of_highest_order_term_of_phi_from_equation_k = expand(solution_of_highest_order_term_of_phi_from_equation_k)
 							solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k] = solution_of_highest_order_term_of_phi_from_equation_k
-							print('---------------------------------------------------')
-							print(solution_dictionary_for_all_higher_derivs)
-							print('---------------------------------------------------')
+							self.string_storer = str(solution_dictionary_for_all_higher_derivs)
+							self.string_storer = self.string_storer[-100:]
+							Clock.schedule_once(self.scheduleOnceTester, 0)
 							if highest_order_term_of_phi_from_equation_k not in list_of_all_highest_derivative_terms_in_phi:
 								list_of_all_highest_derivative_terms_in_phi.append(highest_order_term_of_phi_from_equation_k)
 							break
 				else:
+					print('equation_k_from_the_phi_system = ', equation_k_from_the_phi_system)
 					solution_of_highest_order_term_of_phi_from_equation_k = solve(equation_k_from_the_phi_system, highest_order_term_of_phi_from_equation_k)[0]
-					solution_of_highest_order_term_of_phi_from_equation_k = expand(solution_of_highest_order_term_of_phi_from_equation_k)
+					solution_of_highest_order_term_of_phi_from_equation_k = expand(solution_of_highest_order_term_of_phi_from_equation_k).doit()
 					solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k] = solution_of_highest_order_term_of_phi_from_equation_k
-					print('---------------------------------------------------')
-					print(solution_dictionary_for_all_higher_derivs)
-					print('---------------------------------------------------')
+					print('highest_order_term_of_phi_from_equation_k ->', highest_order_term_of_phi_from_equation_k)
+					print('solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k]', solution_dictionary_for_all_higher_derivs[highest_order_term_of_phi_from_equation_k])
+					self.string_storer = str(solution_dictionary_for_all_higher_derivs)
+					self.string_storer = self.string_storer[-100:]
+					Clock.schedule_once(self.scheduleOnceTester, 0)
 					if highest_order_term_of_phi_from_equation_k not in list_of_all_highest_derivative_terms_in_phi:
 						list_of_all_highest_derivative_terms_in_phi.append(highest_order_term_of_phi_from_equation_k)
 		# From here on I have gotten the basic preparatory lists maintained, now I am following the rest of it from the pseudocode of the paper
 		S_equations, S_variables = [], []
 		for variable, substitution in solution_dictionary_for_all_higher_derivs.items():
 			equation = expand(variable - substitution)
-			# equation, _ = fraction(together(equation).doit())
-			# equation = expand(equation)
 			if variable not in S_variables:
 				S_variables.append(variable)
 				S_equations.append(equation)
-		print('---------------------------------------------------')
-		print('list_of_all_highest_derivative_terms_in_phi = ')
-		print('---------------------------------------------------')
-		print(list_of_all_highest_derivative_terms_in_phi)
-		print('---------------------------------------------------')
+		self.string_storer = str(list_of_all_highest_derivative_terms_in_phi)
+		self.string_storer = self.string_storer[-100:]
+		Clock.schedule_once(self.scheduleOnceTester, 0)
 		for k in range(len(S_equations)):
-			print('---------------------------------------------------')
-			print('S_equations[k] = ')
-			print('---------------------------------------------------')
-			print(S_equations[k])
-			print('---------------------------------------------------')
-		print('---------------------------------------------------')
-		print('List of variables ->')
-		print('---------------------------------------------------')
-		print(S_variables)
-		print('---------------------------------------------------')
-		
+			self.string_storer = str(S_equations[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
+		for k in range(len(S_variables)):
+			self.string_storer = str(S_variables[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
 		for k in range(len(S_variables)):
 			variable = S_variables[k]
 			equation = S_equations[k]
 			solution = expand(variable-equation)
-			# solution, _ = fraction(together(solution).doit())
-			# solution = expand(solution)
 			solution_dictionary_for_all_higher_derivs[variable] = solution
-			print('---------------------------------------------------')
-			print(S_equations)
-			print('---------------------------------------------------')
-			print(S_variables)
-			print('---------------------------------------------------')
+			self.string_storer = str(S_equations[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
+			self.string_storer = str(S_variables[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
 
+		print('S_variables = ', S_variables)
+		print('S_equations = ', S_equations)
+		for variable in solution_dictionary_for_all_higher_derivs:
+			print('solution_dictionary_for_all_higher_derivs[',variable,'] = ',solution_dictionary_for_all_higher_derivs[variable])
+		print('list_of_all_highest_derivative_terms_in_phi = ', list_of_all_highest_derivative_terms_in_phi)
+
+		list_of_A_orders, list_of_B_orders = [], []
+		for term in list_of_all_highest_derivative_terms_in_phi:
+			list_of_partial_derivatives = term.variables
+			print('term = ', term)
+			print('list_of_partial_derivatives = ',list_of_partial_derivatives)
+			count_of_t, count_of_x = 0, 0
+			for variable in list_of_partial_derivatives:
+				if variable == t: count_of_t = count_of_t + 1
+				elif variable == x: count_of_x = count_of_x + 1
+			list_of_A_orders.append(count_of_x)
+			list_of_B_orders.append(count_of_t)
+		A_max, A_min, B_max, B_min = max(list_of_A_orders), min(list_of_A_orders), max(list_of_B_orders), min(list_of_B_orders)
+		print('list_of_A_orders -> ', list_of_A_orders, 'A_max = ',A_max, 'A_min = ',A_min)
+		print('list_of_B_orders -> ', list_of_B_orders, 'B_max = ',B_max, 'B_min = ',B_min)
+		list_of_C_orders, list_of_D_orders = [], []
+		for term in list_of_all_highest_derivative_terms_in_uk:
+			list_of_partial_derivatives = term.variables
+			count_of_t, count_of_x = 0, 0
+			for variable in list_of_partial_derivatives:
+				if variable == t: count_of_t = count_of_t + 1
+				elif variable == x: count_of_x = count_of_x + 1
+			list_of_C_orders.append(count_of_x)
+			list_of_D_orders.append(count_of_t)
+		print('list_of_C_orders -> ', list_of_C_orders)
+		print('list_of_D_orders -> ', list_of_D_orders)
+		for v in range(len(list_of_all_highest_derivative_terms_in_uk)):
+			Cv = list_of_C_orders[v]
+			Dv = list_of_D_orders[v]
+			uv = list_of_all_highest_derivative_terms_in_uk[v]
+			gv = solution_dictionary_for_all_higher_derivs[uv]
+			for i in range(15):
+				for j in range(15):
+					equation = expand(diff(uv,(x,i+Cv),(t,j+Dv))-diff(gv,(x,i),(t,j)))
+					variable = diff(uv,(x,i+Cv),(t,j+Dv))
+					for other_variable in solution_dictionary_for_all_higher_derivs:
+						if other_variable != variable:
+							equation = expand(equation.subs(other_variable, solution_dictionary_for_all_higher_derivs[other_variable]).doit())
+							equation = expand(equation)
+					if equation not in S_equations: S_equations.append(equation)
+					if variable not in S_variables: S_variables.append(variable)
+					if variable not in solution_dictionary_for_all_higher_derivs:
+						solution_dictionary_for_all_higher_derivs[variable] = expand(equation-variable).doit()
+					for k in range(len(S_equations)):
+						self.string_storer = str(S_equations[k])
+						self.string_storer = self.string_storer[-100:]
+						Clock.schedule_once(self.scheduleOnceTester, 0)
+					for k in range(len(S_variables)):
+						self.string_storer = str(S_variables[k])
+						self.string_storer = self.string_storer[-100:]
+						Clock.schedule_once(self.scheduleOnceTester, 0)
+		for w in range(len(list_of_A_orders)):
+			Aw = list_of_A_orders[w]
+			Bw = list_of_B_orders[w]
+			phi_term_w = list_of_all_highest_derivative_terms_in_phi[w]
+			fw = solution_dictionary_for_all_higher_derivs[phi_term_w]
+			for derivsInX in range(14):
+				print('derivsInX = ', derivsInX)
+				for derivsInT in range(14):
+					print('derivsInT = ', derivsInT)
+					equation = expand(diff(phi,(x,Aw+derivsInX),(t,Bw+derivsInT))-diff(fw,(x,derivsInX),(t,derivsInT)))
+					print('equation = ', equation)
+					variable = diff(phi,(x,Aw+derivsInX),(t,Bw+derivsInT))
+					print('variable = ', variable)
+					for other_variable in solution_dictionary_for_all_higher_derivs:
+						print('other_variable = ', other_variable)
+						if other_variable != variable:
+							equation = expand(equation.subs(other_variable, solution_dictionary_for_all_higher_derivs[other_variable]).doit())
+							equation = expand(equation)
+					print('equation not in S_equations = ', equation not in S_equations)
+					print('variable not in S_variables = ', variable not in S_variables)
+					print('variable not in solution_dictionary_for_all_higher_derivs = ', variable not in solution_dictionary_for_all_higher_derivs)
+					if equation not in S_equations: S_equations.append(equation)
+					if variable not in S_variables: S_variables.append(variable)
+					if variable not in solution_dictionary_for_all_higher_derivs:
+						solution_dictionary_for_all_higher_derivs[variable] = expand(equation-variable).doit()
+					for k in range(len(S_equations)):
+						self.string_storer = str(S_equations[k])
+						self.string_storer = self.string_storer[-100:]
+						Clock.schedule_once(self.scheduleOnceTester, 0)
+					for k in range(len(S_variables)):
+						self.string_storer = str(S_variables[k])
+						self.string_storer = self.string_storer[-100:]
+						Clock.schedule_once(self.scheduleOnceTester, 0)
+		# Now having set all the equations and the variables I will have to be a little careful
+		# setting up the equation solver both in terms of the data structure and also
+		# the discontinuation of the old solutions.
+		print('S_variables = ', S_variables)
+		print('S_equations = ', S_equations)
+		print('solution_dictionary_for_all_higher_derivs = ', solution_dictionary_for_all_higher_derivs)
 		while True:
 			S_new_equations = []
 			solution_to_data_structure = list(nonlinsolve(S_equations, S_variables))
+			print('solution_to_data_structure = ', solution_to_data_structure)
 			try:
 				for variable, solution in solution_to_data_structure.items():
 					if variable in S_variables:
@@ -677,6 +792,9 @@ class PainleveBacklundCheckApp(MDApp):
 						if equation not in S_new_equations:
 							S_new_equations.append(equation)
 			except:
+				print('S_new_equations = ',S_new_equations)
+				print('len(solution_to_data_structure) = ', len(solution_to_data_structure))
+				print('len(solution_to_data_structure[0]) = ', len(solution_to_data_structure[0]))
 				new_solution_set = solution_to_data_structure[0]
 				for k in range(len(S_variables)):
 					variable = S_variables[k]
@@ -686,86 +804,40 @@ class PainleveBacklundCheckApp(MDApp):
 						S_new_equations.append(equation)
 			flag = len(list(set(S_new_equations) - set(S_equations))) == 0
 			S_equations = S_new_equations
-			print('---------------------------------------------------')
-			print(S_equations)
-			print('---------------------------------------------------')
-			print(S_variables)
-			print('---------------------------------------------------')
+			for k in range(len(S_equations)):
+				self.string_storer = str(S_equations[k])
+				self.string_storer = self.string_storer[-100:]
+				Clock.schedule_once(self.scheduleOnceTester, 0)
+			for k in range(len(S_variables)):
+				self.string_storer = str(S_variables[k])
+				self.string_storer = self.string_storer[-100:]
+				Clock.schedule_once(self.scheduleOnceTester, 0)
+			print('S_variables = ', S_variables)
+			print('S_equations = ', S_equations)
+			print('len(S_variables) = ', len(S_variables))
+			print('len(S_equations) = ', len(S_equations))
+			print(flag)
 			if flag: break
 
+		print('len(S_variables) = ', len(S_variables))
+		print('len(S_equations) = ', len(S_equations))
 		for k in range(len(S_variables)):
 			solution_dictionary_for_all_higher_derivs[S_variables[k]] = expand(S_equations[k]-S_variables[k])
 
-		list_of_A_orders, list_of_B_orders = [], []
-		for term in list_of_all_highest_derivative_terms_in_phi:
-			list_of_partial_derivatives = term.variables
-			if t in list_of_partial_derivatives:
-				count_of_t, count_of_x = 0, 0
-				for variable in list_of_partial_derivatives:
-					if variable == t: count_of_t = count_of_t + 1
-					elif variable == x: count_of_x = count_of_x + 1
-			list_of_A_orders.append(count_of_x)
-			list_of_B_orders.append(count_of_t)
-		A_max, A_min, B_max, B_min = max(list_of_A_orders), min(list_of_A_orders), max(list_of_B_orders), min(list_of_B_orders)
-		list_of_C_orders, list_of_D_orders = [], []
-		for term in list_of_all_highest_derivative_terms_in_uk:
-			list_of_partial_derivatives = term.variables
-			if t in list_of_partial_derivatives:
-				count_of_t, count_of_x = 0, 0
-				for variable in list_of_partial_derivatives:
-					if variable == t: count_of_t = count_of_t + 1
-					elif variable == x: count_of_x = count_of_x + 1
-			list_of_C_orders.append(count_of_x)
-			list_of_D_orders.append(count_of_t)
-		for v in range(len(list_of_all_highest_derivative_terms_in_uk)):
-			Cv = list_of_C_orders[v]
-			Dv = list_of_D_orders[v]
-			uv = list_of_all_highest_derivative_terms_in_uk[v]
-			gv = solution_dictionary_for_all_higher_derivs[uv]
-			for i in range(1, A_max-A_min+1):
-				for j in range(1, B_max-B_min+1):
-					equation = expand(diff(uv,(x,i+Cv),(t,j+Dv))-diff(gv,(x,i),(t,j)))
-					variable = diff(uv,(x,i+Cv),(t,j+Dv))
-					for other_variable in solution_dictionary_for_all_higher_derivs:
-						if other_variable != variable:
-							equation = expand(equation.subs(other_variable, solution_dictionary_for_all_higher_derivs[other_variable]).doit())
-					if equation not in S_equations: S_equations.append(equation)
-					if variable not in S_variables: S_variables.append(variable)
-					if variable not in solution_dictionary_for_all_higher_derivs:
-						solution_dictionary_for_all_higher_derivs[variable] = expand(equation-variable).doit()
-					print('---------------------------------------------------')
-					print(S_equations)
-					print('---------------------------------------------------')
-					print(S_variables)
-					print('---------------------------------------------------')
-		for w in range(len(list_of_A_orders)):
-			Aw = list_of_A_orders[w]
-			Bw = list_of_B_orders[w]
-			phi_term_w = list_of_all_highest_derivative_terms_in_phi[w]
-			fw = solution_dictionary_for_all_higher_derivs[phi_term_w]
-			for derivsInX in range(1, A_max-Aw+1):
-				for derivsInT in range(1, B_max-Bw+1):
-					equation = expand(diff(phi,(x,Aw+derivsInX),(t,Bw+derivsInT))-diff(fw,(x,derivsInX),(t,derivsInT)))
-					variable = diff(phi,(x,Aw+derivsInX),(t,Bw+derivsInT))
-					for other_variable in solution_dictionary_for_all_higher_derivs:
-						if other_variable != variable:
-							equation = expand(equation.subs(other_variable, solution_dictionary_for_all_higher_derivs[other_variable]).doit())
-					if equation not in S_equations: S_equations.append(equation)
-					if variable not in S_variables: S_variables.append(variable)
-					if variable not in solution_dictionary_for_all_higher_derivs:
-						solution_dictionary_for_all_higher_derivs[variable] = expand(equation-variable).doit()
-					print('---------------------------------------------------')
-					print(S_equations)
-					print('---------------------------------------------------')
-					print(S_variables)
-					print('---------------------------------------------------')
-		# Now having set all the equations and the variables I will have to be a little careful
-		# setting up the equation solver both in terms of the data structure and also
-		# the discontinuation of the old solutions.
+		print(solution_dictionary_for_all_higher_derivs)
+		print('S_variables ->')
+		for k in range(len(S_variables)):
+			print('k -> ', k, ' ->', S_variables[k])
+		print('len(S_variables) -> ', len(S_variables))
+		print('S_equations ->')
+		for k in range(len(S_equations)):
+			print('k -> ', k, ' ->', S_equations[k])
+		print('len(S_equations) -> ', len(S_equations))
 
-		W_set, R_set = [None for k in range(n)], [None for k in range(n)]
+		n_0 = len(list_of_all_highest_derivative_terms_in_phi)
+		W_set, R_set = [None for k in range(n_0)], [None for k in range(n_0)]
 		flag1 = True
-		for k in range(n-1):
+		for k in range(n_0-1):
 			Ak, Ak_plus_1 = list_of_A_orders[k], list_of_A_orders[k+1]
 			Bk, Bk_plus_1 = list_of_B_orders[k], list_of_B_orders[k+1]
 			phi_term_k = list_of_all_highest_derivative_terms_in_phi[k]
@@ -782,7 +854,9 @@ class PainleveBacklundCheckApp(MDApp):
 			# Let us see if we can extract the nth roots (for e.g. square roots etc.) in W_set[k] and make it easier ....
 			target_root_order = 2
 			while target_root_order < 10:
-				print('target_root_order = ',target_root_order)
+				self.string_storer = str(target_root_order)
+				self.string_storer = self.string_storer[-100:]
+				Clock.schedule_once(self.scheduleOnceTester, 0)
 				nth_root_instances = [term for term in W_set[k].find(lambda x: isinstance(x, Pow) and x.exp == 1/target_root_order)]
 				has_nth_root = len(nth_root_instances) > 0
 				if has_nth_root:
@@ -791,62 +865,70 @@ class PainleveBacklundCheckApp(MDApp):
 					W_set[k] = resultant(W_set[k], reference_expression, radical)
 					break
 				target_root_order = target_root_order + 1
+			print('W_set['+str(k)+'] = ',W_set[k])
 			flag1 = flag1 and W_set[k] == 0
-			print('---------------------------------------------------')
-			print(W_set[k])
-			print('---------------------------------------------------')
-		A_n_minus_1, A_0 = list_of_A_orders[n-1], list_of_A_orders[0]
-		B_n_minus_1, B_0 = list_of_B_orders[n-1], list_of_B_orders[0]
-		phi_term_n_minus_1 = list_of_all_highest_derivative_terms_in_phi[n-1]
+			self.string_storer = str(W_set[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
+		A_n_minus_1, A_0 = list_of_A_orders[n_0-1], list_of_A_orders[0]
+		B_n_minus_1, B_0 = list_of_B_orders[n_0-1], list_of_B_orders[0]
+		phi_term_n_minus_1 = list_of_all_highest_derivative_terms_in_phi[n_0-1]
 		f_n_minus_1 = solution_dictionary_for_all_higher_derivs[phi_term_n_minus_1]
 		phi_term_0 = list_of_all_highest_derivative_terms_in_phi[0]
 		f_0 = solution_dictionary_for_all_higher_derivs[phi_term_0]
-		W_set[n-1] = expand(diff(f_n_minus_1, (x,A_max-A_n_minus_1), (t, B_max-B_n_minus_1))-diff(f_0, (x,A_max-A_0), (t, B_max-B_0)))
-		W_set[n-1], _ = fraction(together(W_set[n-1]).doit())
-		W_set[n-1] = expand(W_set[n-1])
+		W_set[n_0-1] = expand(diff(f_n_minus_1, (x,A_max-A_n_minus_1), (t, B_max-B_n_minus_1))-diff(f_0, (x,A_max-A_0), (t, B_max-B_0)))
+		W_set[n_0-1], _ = fraction(together(W_set[n_0-1]).doit())
+		W_set[n_0-1] = expand(W_set[n_0-1])
 		for variable, solution in solution_dictionary_for_all_higher_derivs.items():
-			W_set[n-1] = expand(W_set[n-1].subs(variable, solution))
-			W_set[n-1], _ = fraction(together(W_set[n-1]).doit())
-			W_set[n-1] = expand(W_set[n-1])
+			W_set[n_0-1] = expand(W_set[n_0-1].subs(variable, solution))
+			W_set[n_0-1], _ = fraction(together(W_set[n_0-1]).doit())
+			W_set[n_0-1] = expand(W_set[n_0-1])
 		target_root_order = 2
-		while target_root_order < 10:
-			nth_root_instances = [term for term in W_set[n-1].find(lambda x: isinstance(x, Pow) and x.exp == 1/target_root_order)]
+		while target_root_order < 20:
+			nth_root_instances = [term for term in W_set[n_0-1].find(lambda x: isinstance(x, Pow) and x.exp == 1/target_root_order)]
 			has_nth_root = len(nth_root_instances) > 0
 			if has_nth_root:
-				reference_expression = expand(W_set[n-1]**target_root_order)
+				reference_expression = expand(W_set[n_0-1]**target_root_order)
 				radical = nth_root_instances[0]
-				W_set[n-1] = resultant(W_set[n-1], reference_expression, radical)
+				W_set[n_0-1] = resultant(W_set[n_0-1], reference_expression, radical)
 				break
 			target_root_order = target_root_order + 1
-		print('---------------------------------------------------')
-		print(W_set[n-1])
-		print('---------------------------------------------------')
-		flag1 = flag1 and W_set[n-1] == 0
+		print('W_set['+str(n_0-1)+'] = ',W_set[n_0-1])
+		self.string_storer = str(W_set[n_0-1])
+		self.string_storer = self.string_storer[-100:]
+		Clock.schedule_once(self.scheduleOnceTester, 0)
+		flag1 = flag1 and W_set[n_0-1] == 0
 		flag2 = True
-		phi_term_random = choice(list_of_all_highest_derivative_terms_in_phi)
-		for k in range(n-1):
+		expression_terms = W_set[-1].as_coefficients_dict()
+		list_of_differential_terms_from_one_of_the_last_terms = []
+		for term, coefficient in expression_terms.items():
+			if isinstance(term, Derivative) and term not in list_of_differential_terms_from_one_of_the_last_terms:
+				list_of_differential_terms_from_one_of_the_last_terms.append(term)
+			elif isinstance(term, Mul):
+				for sub_term in term.args:
+					if isinstance(sub_term, Derivative) and sub_term not in list_of_differential_terms_from_one_of_the_last_terms:
+						list_of_differential_terms_from_one_of_the_last_terms.append(sub_term)
+		phi_term_random = choice(list_of_differential_terms_from_one_of_the_last_terms)
+		print('phi_term_random = ',phi_term_random)
+		for k in range(n_0-1):
 			R_set[k] = expand(resultant(
 				W_set[k],W_set[k+1],\
 				phi_term_random
 				))
+			print('R_set['+str(k)+'] = ',R_set[k])
 			flag2 = flag2 and R_set[k] == 0
-			print('---------------------------------------------------')
-			print(R_set[k])
-			print('---------------------------------------------------')
-		R_set[n-1] = expand(resultant(
-			W_set[n-1],W_set[0],\
+			self.string_storer = str(R_set[k])
+			self.string_storer = self.string_storer[-100:]
+			Clock.schedule_once(self.scheduleOnceTester, 0)
+		R_set[n_0-1] = expand(resultant(
+			W_set[n_0-1],W_set[0],\
 			phi_term_random
 			))
-		flag2 = flag2 and R_set[n-1] == 0
-		print('---------------------------------------------------')
-		print(R_set[n-1])
-		print('---------------------------------------------------')
-		print('---------------------------------------------------')
-		print(flag1)
-		print('---------------------------------------------------')
-		print('---------------------------------------------------')
-		print(flag2)
-		print('---------------------------------------------------')
+		print('R_set['+str(n_0-1)+'] = ',R_set[n_0-1])
+		flag2 = flag2 and R_set[n_0-1] == 0
+		self.string_storer = str(R_set[n_0-1])
+		self.string_storer = self.string_storer[-100:]
+		Clock.schedule_once(self.scheduleOnceTester, 0)
 		return (flag1 or flag2)
 
 	def BacklundContextFreeAndContextSensitiveCompatibility(self):
@@ -860,6 +942,7 @@ class PainleveBacklundCheckApp(MDApp):
 		u = 0
 		for k in range(beta_new+1):
 			u = u + u_coeff[k]/phi**(beta_new-k)
+		backlund_transform_store = u
 		print(u)
 		generator_list = [phi, 1/phi]
 		for k in range(10):
@@ -887,9 +970,11 @@ class PainleveBacklundCheckApp(MDApp):
 			u_solution[k] = solve(equation_list[k],u_coeff[k])[0]
 			print('k -> ', k, ' equation_list[k] = ', equation_list[k])
 			print('k -> ', k, ' u_solution[k] = ', u_solution[k])
+			backlund_transform_store = backlund_transform_store.subs(u_coeff[k], u_solution[k])
 			assert expand(equation_list[k].subs(u_coeff[k], u_solution[k]).doit()) == 0
 		if k == beta_new-1: k_max_with_non_zero_coeffs = beta_new
 		print('k_max_with_non_zero_coeffs = ',k_max_with_non_zero_coeffs)
+		self.backlund_transform = backlund_transform_store
 		k_lower = k_max_with_non_zero_coeffs if k_max_with_non_zero_coeffs == beta_new else k_max_with_non_zero_coeffs+1
 		ListOfEquation = [[None for j in range(mu_min+1-k_lower)] for i in range(k_max_with_non_zero_coeffs)]
 		for k in range(k_lower, mu_min+1):
@@ -907,58 +992,83 @@ class PainleveBacklundCheckApp(MDApp):
 		self.string_storer = str(ListOfEquation[-1])
 		self.string_storer = self.string_storer[-100:]
 		Clock.schedule_once(self.scheduleOnceTester, 0)
-		fresh_list_of_equations = ListOfEquation[-1]
-		fresh_list_of_equations = [
-			element for element in fresh_list_of_equations if element != 0
-			]
-		compatibility_Conditions_storage = fresh_list_of_equations
-		context_free_first_check = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs(fresh_list_of_equations, phi)
-		if context_free_first_check[1] == True:
-			self.context_free_compatibility_test = True
-			context_free_check_threaded_results = [[] for k in range(len(fresh_list_of_equations))]
-			list_of_set_of_equations_excluding_resonance_integer = [[equation for equation in fresh_list_of_equations if equation != fresh_list_of_equations[k]] for k in range(len(fresh_list_of_equations))]
-			context_free_check_executable_threads = [threading.Thread(target=self.MultiThreadedContextFreeDifferentialCommutationCompatibilitySystemPDEs,args=(list_of_set_of_equations_excluding_resonance_integer[k], phi, context_free_check_threaded_results[k],)) for k in range(len(fresh_list_of_equations))]
-			context_free_second_check = False
-			for k in range(len(fresh_list_of_equations)): context_free_check_executable_threads[k].start()
-			for k in range(len(fresh_list_of_equations)): context_free_check_executable_threads[k].join()
-			for k in range(len(fresh_list_of_equations)):
-				flag_check = context_free_check_threaded_results[k][0]
-				if flag_check[1]:
-					context_free_second_check = True
-					fresh_list_of_equations = list_of_set_of_equations_excluding_resonance_integer[k]
-					break
-				else: pass
-			if context_free_second_check:
-				self.context_free_compatibility_test = True
-				context_free_check_threaded_results = [[] for k in range(len(fresh_list_of_equations))]
-				list_of_set_of_equations_excluding_resonance_integer = [[equation for equation in fresh_list_of_equations if equation != fresh_list_of_equations[k]] for k in range(len(fresh_list_of_equations))]
-				context_free_check_executable_threads = [threading.Thread(target=self.MultiThreadedContextFreeDifferentialCommutationCompatibilitySystemPDEs,args=(list_of_set_of_equations_excluding_resonance_integer[k], phi, context_free_check_threaded_results[k],)) for k in range(len(fresh_list_of_equations))]
-				context_free_third_check = False
-				for k in range(len(fresh_list_of_equations)): context_free_check_executable_threads[k].start()
-				for k in range(len(fresh_list_of_equations)): context_free_check_executable_threads[k].join()
-				for k in range(len(fresh_list_of_equations)):
-					flag_check = context_free_check_threaded_results[k][0]
-					if flag_check[1]:
-						context_free_third_check = True
-						fresh_list_of_equations = list_of_set_of_equations_excluding_resonance_integer[k]
-						break
-					else: pass
-		else:
-			self.context_free_compatibility_test = False
+		TotalSystemOfPDEs = ListOfEquation[-1]
+		while True:
 			try:
-				fresh_list_of_equations = ListOfEquation[-2]
-				fresh_list_of_equations = [
-					element for element in fresh_list_of_equations if element != 0
-				]
-				expression, _ = fraction(together(u_coeff[k_max_with_non_zero_coeffs-1] - u_solution[k_max_with_non_zero_coeffs-1]).doit())
-				expression = expand(expression)
-				fresh_list_of_equations = [expression] + fresh_list_of_equations
-				context_free_second_check = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs(fresh_list_of_equations, phi)
-				self.context_free_compatibility_test = context_free_second_check[1]
+				TotalSystemOfPDEs.remove(0)
 			except:
-				pass
-
-
+				break
+		contextualPDEs = [TotalSystemOfPDEs[-1]]
+		systemOfPDEs = TotalSystemOfPDEs
+		systemOfPDEs.remove(TotalSystemOfPDEs[-1])
+		filteredSystemOfPDEs = systemOfPDEs
+		print('filteredSystemOfPDEs =',filteredSystemOfPDEs)
+		print('len(filteredSystemOfPDEs) =',len(filteredSystemOfPDEs))
+		flag_context_free_compatibility = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs(filteredSystemOfPDEs+contextualPDEs, phi)
+		stored_filteredSystemOfPDEs = [filteredSystemOfPDEs[k] for k in range(len(filteredSystemOfPDEs))]
+		if flag_context_free_compatibility[1]:
+			self.context_free_compatibility_test = True
+			while len(filteredSystemOfPDEs)+len(contextualPDEs) >= 2:
+				switch_track = False
+				for f1 in filteredSystemOfPDEs:
+					print('f1 = ', f1)
+					newSystemOfPDEs = filteredSystemOfPDEs
+					newSystemOfPDEs.remove(f1)
+					print('newSystemOfPDEs+contextualPDEs =',newSystemOfPDEs+contextualPDEs)
+					print('len(newSystemOfPDEs)+len(contextualPDEs) =',len(newSystemOfPDEs)+len(contextualPDEs))
+					self.string_storer = str(newSystemOfPDEs)
+					self.string_storer = self.string_storer[-100:]
+					Clock.schedule_once(self.scheduleOnceTester, 0)
+					if len(newSystemOfPDEs)+len(contextualPDEs) == 2:
+						self.context_free_compatibility_test = True
+						self.context_sensitive_compatibility_test = True
+						self.compatibility_test = True
+						self.associated_conditions = [f1] # newSystemOfPDEs
+						return
+					else:
+						print('>> newSystemOfPDEs+contextualPDEs =',newSystemOfPDEs+contextualPDEs)
+						print('>> len(newSystemOfPDEs)+len(contextualPDEs) =',len(newSystemOfPDEs)+len(contextualPDEs))
+						flag = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs(newSystemOfPDEs+contextualPDEs, phi)
+						if flag[1]:
+							filteredSystemOfPDEs = newSystemOfPDEs
+							continue
+						else:
+							filteredSystemOfPDEs = newSystemOfPDEs
+							switch_track = True
+							break
+				print('switch_track = ',switch_track)
+				if switch_track: break
+			print('filteredSystemOfPDEs =', filteredSystemOfPDEs)
+			print('newSystemOfPDEs = ', newSystemOfPDEs)
+			print('stored_filteredSystemOfPDEs =', stored_filteredSystemOfPDEs)
+			print('stored_filteredSystemOfPDEs\\filteredSystemOfPDEs = ',list(set(stored_filteredSystemOfPDEs)-set(filteredSystemOfPDEs)))
+			print('stored_filteredSystemOfPDEs\\newSystemOfPDEs =', list(set(stored_filteredSystemOfPDEs)-set(newSystemOfPDEs)))
+			print('filteredSystemOfPDEs\\newSystemOfPDEs =', list(set(filteredSystemOfPDEs)-set(newSystemOfPDEs)))
+			print('contextualPDEs =', contextualPDEs)
+			if self.ContextSensitiveDifferentialCommutationCompatibilitySystemPDEs(filteredSystemOfPDEs, contextualPDEs, phi, [u_coeff[beta_new]]):
+				self.context_free_compatibility_test = True
+				self.context_sensitive_compatibility_test = True
+				self.compatibility_test = True
+				self.associated_conditions = filteredSystemOfPDEs
+				return
+			else:
+				self.context_free_compatibility_test = True
+				self.context_sensitive_compatibility_test = False
+				self.compatibility_test = False
+				self.associated_conditions = filteredSystemOfPDEs
+				return
+		elif self.ContextSensitiveDifferentialCommutationCompatibilitySystemPDEs(filteredSystemOfPDEs, contextualPDEs, phi, [u_coeff[beta_new]]):
+			self.context_free_compatibility_test = False
+			self.context_sensitive_compatibility_test = True
+			self.compatibility_test = True
+			self.associated_conditions = filteredSystemOfPDEs
+			return
+		else:
+			self.context_free_compatibility_test = True
+			self.context_sensitive_compatibility_test = False
+			self.compatibility_test = False
+			self.associated_conditions = filteredSystemOfPDEs
+			return
 	def show_dialog(self):
 		if not self.dialog:
 			self.dialog = MDDialog(
@@ -978,7 +1088,7 @@ class PainleveBacklundCheckApp(MDApp):
 				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' is non-integrable'
 			else:
 				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' is integrable with the auto-Backlund transform '+str(self.backlund_transform)
-				self.root.ids.integrability_handler.text = '\n with the following compatible set of '
+				self.root.ids.integrability_handler.text = self.root.ids.integrability_handler.text + ' with the following compatible set of '+str(self.associated_conditions)
 		if hasattr(self, 'schedule_interval'):
 			Clock.unschedule(self.scheduleOnceTester)
 		self.dialog = None
