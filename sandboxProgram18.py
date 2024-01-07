@@ -53,13 +53,13 @@ KV = '''
 		id: process_displayer
 		hint_text: "Process will be shown here"
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		text: "Process will be shown here"
 
 	MDRectangleFlatButton:
 		id: close_button
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		text: "Close"
 		on_release: app.close_handler()
 
@@ -67,17 +67,17 @@ MDScreen:
 
 	MDLabel:
 		id: main_handler
-		text: "Welcome to the Painleve-Backlund check app"
+		text: "Welcome to the \\nPainleve-Backlund \\n check app"
 		halign: "center"
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		pos_hint: {"center_x": 0.2, "center_y": 0.9}
 
 	MDTextField:
 		id: input_pde
 		text: "Enter the PDE"
 		font_name: "Georgia"
-		font_size: 22
+		font_size: 30
 		halign: "center"
 		pos_hint: {"center_x": 0.65, "center_y": 0.9}
 		size_hint: 0.5, 0.125
@@ -85,7 +85,7 @@ MDScreen:
 	MDTextField:
 		multiline: True
 		font_name: "Georgia"
-		font_size: 20
+		font_size: 30
 		id: integrability_handler
 		text: "The result of the integrability test will be shown here."
 		halign: "center"
@@ -96,7 +96,7 @@ MDScreen:
 		id: integrability_window
 		text: "Integrability test"
 		font_name: "Georgia"
-		font_size: 22
+		font_size: 30
 		theme_text_color: "Custom"
 		pos_hint: {"center_x": 0.4, "center_y": 0.1}
 		on_release: app.show_dialog()
@@ -118,7 +118,7 @@ class PainleveBacklundCheckApp(MDApp):
 	def build(self):
 		self.root = Builder.load_string(KV)
 		self.theme_cls.theme_style = 'Dark'
-		self.theme_cls.primary_palette = 'Green'
+		self.theme_cls.primary_palette = 'Pink'
 		return self.root
 
 	def on_start(self):
@@ -490,7 +490,7 @@ class PainleveBacklundCheckApp(MDApp):
 			u2 = Function('u2')(x, t)
 			eqn1 = diff(phi,x)*diff(phi,t)+u2*diff(phi,x)**2+4*sigma*diff(phi,x)*diff(phi,(x,3))-3*sigma*diff(phi,(x,2))**2
 			eqn2 = diff(phi,x,t)+u2*diff(phi,x,x)+sigma*diff(phi,x,x,x,x)
-			self.associated_conditions = [eqn1, eqn2, diff(u2,t)+u2*diff(u2,x)+sigma*diff(u2,(x,3))]
+			self.associated_conditions = [eqn1]
 			solution = solve([eqn1,eqn2],[diff(phi,t),diff(phi,x,x,x,x)])
 
 			phit_soln = solution[diff(phi,t)]
@@ -583,7 +583,6 @@ class PainleveBacklundCheckApp(MDApp):
 
 			compatibility_test_expression = equation2 - equation1
 			compatibility_test_expression = expand(compatibility_test_expression)
-			self.associated_conditions = [eqn1, eqn2, diff(u2,t)+u2*diff(u2,x)+sigma*diff(u2,(x,3))]
 			self.context_sensitive_compatibility_test = compatibility_test_expression == 0
 			self.compatibility_test = flag_switch and compatibility_test_expression == 0
 
@@ -633,7 +632,7 @@ class PainleveBacklundCheckApp(MDApp):
 					self.string_storer = 'It is based on: '+str(u_max)
 					Clock.schedule_once(self.scheduleOnceTester, 0)
 
-			self.associated_conditions = result_package[2][k][0]
+			self.associated_conditions = [result_package[2][k][0]]
 			if len([phi, u_max]) == len(list(set(result_package[2][k])-set([result_package[2][k][1]]))):
 				if flag_switch:
 					self.context_sensitive_compatibility_test = 1
@@ -872,7 +871,7 @@ class PainleveBacklundCheckApp(MDApp):
 			self.string_storer = str(compatibility_check_wrap_3)
 			Clock.schedule_once(self.scheduleOnceTester, 0)
 
-			self.associated_conditions = [Equation3_compatibility_test, Equation4_compatibility_test, Equation5_compatibility_test, Equation6_compatibility_test]
+			self.associated_conditions = [Equation3_compatibility_test]
 
 			self.compatibility_test = int((compatibility_check_wrap_1 == 0) and (compatibility_check_wrap_2 == 0) \
 				and (compatibility_check_wrap_3 == 0))
@@ -1075,6 +1074,7 @@ class PainleveBacklundCheckApp(MDApp):
 			d1 = Poly(d1, gens = generator_list)
 			d2 = Poly(d2, gens = generator_list)
 			compatibility_check = resultant(d1, d2)
+			# self.associated_conditions = [Equation3_compatibility_test]
 			self.string_storer = str(compatibility_check)
 			self.compatibility_test = int(compatibility_check == 0)
 			Clock.schedule_once(self.scheduleOnceTester, 0)
