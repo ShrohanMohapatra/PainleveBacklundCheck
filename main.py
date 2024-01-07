@@ -722,8 +722,8 @@ class PainleveBacklundCheckApp(MDApp):
 			Dv = list_of_D_orders[v]
 			uv = list_of_all_highest_derivative_terms_in_uk[v]
 			gv = solution_dictionary_for_all_higher_derivs[uv]
-			for i in range(15):
-				for j in range(15):
+			for i in range(15+max([A_max, B_max])):
+				for j in range(15+max([A_max, B_max])):
 					equation = expand(diff(uv,(x,i+Cv),(t,j+Dv))-diff(gv,(x,i),(t,j)))
 					variable = diff(uv,(x,i+Cv),(t,j+Dv))
 					for other_variable in solution_dictionary_for_all_higher_derivs:
