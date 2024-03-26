@@ -439,7 +439,7 @@ class PainleveBacklundCheckApp(MDApp):
 		phi = Function('phi')(x, t)
 		f = Function('f')
 
-		if self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)+sigma*diff(f(x,t),(x,3))':
+		if self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)+sigma*diff(f(x,t),(x,3))' or self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)+sigma*diff(f(x,t),x,x,x)':
 			input_pde_expression = parse_expr(self.root.ids.input_pde.text)
 			result_package = self.ultimatePainleve(input_pde_expression, x, t)
 			print(result_package[0])
@@ -586,7 +586,7 @@ class PainleveBacklundCheckApp(MDApp):
 			self.context_sensitive_compatibility_test = compatibility_test_expression == 0
 			self.compatibility_test = flag_switch and compatibility_test_expression == 0
 
-		elif self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)-sigma*diff(f(x,t),(x,2))':
+		elif self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)-sigma*diff(f(x,t),(x,2))' or self.root.ids.input_pde.text == 'diff(f(x,t),t)+f(x,t)*diff(f(x,t),x)-sigma*diff(f(x,t),x,x)':
 			result_package = self.ultimatePainleve(parse_expr(self.root.ids.input_pde.text), x, t)
 			Number_Of_Sets = len(result_package[2])
 			alpha = result_package[0]
@@ -651,14 +651,14 @@ class PainleveBacklundCheckApp(MDApp):
 					self.string_storer = 'The equation '+self.root.ids.input_pde.text+' is non-integrable'
 					Clock.schedule_once(self.scheduleOnceTester, 0)
 		
-		elif self.root.ids.input_pde.text == '2*f(x,t)*diff(f(x,t),x,t)-2*diff(f(x,t),x)*diff(f(x,t),t)-f(x,t)**3+f(x,t)':
+		elif self.root.ids.input_pde.text == '2*f(x,t)*diff(f(x,t),x,t)-2*diff(f(x,t),x)*diff(f(x,t),t)-f(x,t)**3+f(x,t)' or self.root.ids.input_pde.text == '2*f(x,t)*diff(f(x,t),t,x)-2*diff(f(x,t),x)*diff(f(x,t),t)-f(x,t)**3+f(x,t)':
 			f = Function('f')
 			TransformedSineGordonEquation = parse_expr('2*f(x,t)*diff(f(x,t),x,t)-2*diff(f(x,t),x)*diff(f(x,t),t)-f(x,t)**3+f(x,t)')
 			u0 = Function('u0')(x, t)
 			u1 = Function('u1')(x, t)
 			u2 = Function('u2')(x, t)
 			u = u0/phi**2 + u1/phi + u2
-			self.backlund_transform = u0/phi**2 + u1/phi + u2
+			
 			TransformedSineGordonPainleveExpansion = expand(TransformedSineGordonEquation.subs(f(x, t), u).doit())
 			generator_list = [
 				phi, 1/phi,
@@ -731,6 +731,7 @@ class PainleveBacklundCheckApp(MDApp):
 			self.string_storer = str(Equation6_compatibility_test)
 			Clock.schedule_once(self.scheduleOnceTester, 0)
 
+			self.backlund_transform = u0_solution/phi**2 + u1_solution/phi + u2
 			self.context_free_compatibility_test = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs([Equation3, Equation4, Equation5, Equation6],phi)
 
 			phi_ttxx_solution = expand(solve(Equation3_compatibility_test, diff(phi,t,t,x,x))[0])
@@ -1086,7 +1087,7 @@ class PainleveBacklundCheckApp(MDApp):
 			u2 = Function('u2')(x, t)
 
 			u = u0/phi**2 + u1/phi + u2
-			self.backlund_transform = u0/phi**2 + u1/phi + u2
+			
 			BBMEquation = parse_expr(self.root.ids.input_pde.text)
 			BBMPainleveExpansion = expand(BBMEquation.subs(f(x, t), u).doit())
 
@@ -1149,6 +1150,7 @@ class PainleveBacklundCheckApp(MDApp):
 			self.string_storer = str(Equation5)
 			Clock.schedule_once(self.scheduleOnceTester, 0)
 
+			self.backlund_transform = u0_solution/phi**2 + u1/phi + u2
 			self.context_free_compatibility_test = self.ContextFreeDifferentialCommutationCompatibilitySystemPDEs([Equation1,Equation2,Equation3,Equation4,Equation5],phi)
 
 			eqn51 = Equation1
@@ -1632,9 +1634,9 @@ class PainleveBacklundCheckApp(MDApp):
 		if self.dialog:
 			self.dialog.dismiss()
 			if self.compatibility_test == 0:
-				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' is non-integrable'
+				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' IS NOT a good candidate for integrability'
 			else:
-				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' is integrable'
+				self.root.ids.integrability_handler.text = 'The equation '+self.root.ids.input_pde.text+' IS a good candidate for integrability'
 				self.root.ids.integrability_handler.text += '\nwith the auto-Backlund transform '+str(self.backlund_transform)
 				self.root.ids.integrability_handler.text += '\n with the following compatible set of conditions\n'
 				self.root.ids.integrability_handler.text += str(self.associated_conditions)
